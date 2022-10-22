@@ -14,6 +14,10 @@ import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
+import Store from 'electron-store';
+import fs from 'fs';
+
+const store = new Store();
 
 class AppUpdater {
   constructor() {
@@ -25,10 +29,38 @@ class AppUpdater {
 
 let mainWindow: BrowserWindow | null = null;
 
+// IPC listener
+// file open dialog
+ipcMain.on('file-open', (event, arg) => {
+  const { dialog } = require('electron');
+  dialog
+    .showOpenDialog({
+      properties: ['openFile'],
+      filters: [{ name: '', extensions: ['md', 'txt'] }],
+    })
+    .then((result) => {
+      if (result.filePaths.length > 0) {
+        const filePath = result.filePaths[0];
+        const fileContent = fs.readFileSync(filePath, 'utf-8');
+        event.reply('file-open-reply', fileContent);
+      }
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+});
+
 ipcMain.on('ipc-example', async (event, arg) => {
   const msgTemplate = (pingPong: string) => `IPC test: ${pingPong}`;
   console.log(msgTemplate(arg));
   event.reply('ipc-example', msgTemplate('pong'));
+});
+
+ipcMain.on('electron-store-get', async (event, val) => {
+  event.returnValue = store.get(val);
+});
+ipcMain.on('electron-store-set', async (event, key, val) => {
+  store.set(key, val);
 });
 
 if (process.env.NODE_ENV === 'production') {
@@ -73,7 +105,7 @@ const createWindow = async () => {
     show: false,
     width: 1024,
     height: 728,
-    icon: getAssetPath('icon.png'),
+    icon: getAssetPath('logo.icns'),
     webPreferences: {
       preload: app.isPackaged
         ? path.join(__dirname, 'preload.js')

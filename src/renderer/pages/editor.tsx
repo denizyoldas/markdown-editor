@@ -3,12 +3,15 @@ import { marked } from 'marked';
 import { useState } from 'react';
 
 const Editor = () => {
-  const [text, setText] = useState<string>('');
+  const [text, setText] = useState<string>(
+    window.electron.store.get('file') ?? ''
+  );
 
   return (
     <div className="editor_wrapper">
       <div className="editor">
         <CodeEditor
+          value={text}
           className="code_editor"
           language="markdown"
           placeholder="markdown text"

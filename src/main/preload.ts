@@ -1,6 +1,11 @@
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 
-export type Channels = 'ipc-example';
+export type Channels =
+  | 'file-open'
+  | 'file-open-reply'
+  | 'ipc-example'
+  | 'electron-store-get'
+  | 'electron-store-set';
 
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {
@@ -19,5 +24,14 @@ contextBridge.exposeInMainWorld('electron', {
     once(channel: Channels, func: (...args: unknown[]) => void) {
       ipcRenderer.once(channel, (_event, ...args) => func(...args));
     },
+  },
+  store: {
+    get(key: any) {
+      return ipcRenderer.sendSync('electron-store-get', key);
+    },
+    set(property: any, val: any) {
+      ipcRenderer.send('electron-store-set', property, val);
+    },
+    // Other method you want to add like has(), reset(), etc.
   },
 });
