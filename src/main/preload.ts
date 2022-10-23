@@ -3,6 +3,10 @@ import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 export type Channels =
   | 'file-open'
   | 'file-open-reply'
+  | 'file-save'
+  | 'file-new'
+  | 'folder-open'
+  | 'folder-open-reply'
   | 'ipc-example'
   | 'electron-store-get'
   | 'electron-store-set';

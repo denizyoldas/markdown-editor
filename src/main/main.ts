@@ -10,12 +10,12 @@
  */
 import path from 'path';
 import { app, BrowserWindow, shell, ipcMain } from 'electron';
-import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
-import MenuBuilder from './menu';
-import { resolveHtmlPath } from './util';
+import { autoUpdater } from 'electron-updater';
 import Store from 'electron-store';
 import fs from 'fs';
+import MenuBuilder from './menu';
+import { resolveHtmlPath } from './util';
 
 const store = new Store();
 
@@ -32,17 +32,89 @@ let mainWindow: BrowserWindow | null = null;
 // IPC listener
 // file open dialog
 ipcMain.on('file-open', (event, arg) => {
+  const [fileName] = arg;
+
+  if (fileName.length > 0) {
+    const folderPath = store.get('folderPath') as string;
+    const filePath = path.join(folderPath, fileName);
+    const fileContent = fs.readFileSync(filePath, 'utf-8');
+    store.set('filePath', filePath);
+    event.reply('file-open-reply', fileContent);
+  } else {
+    const { dialog } = require('electron');
+    dialog
+      .showOpenDialog({
+        properties: ['openFile'],
+        filters: [{ name: '', extensions: ['md', 'txt'] }],
+      })
+      .then((result) => {
+        if (result.filePaths.length > 0) {
+          const filePath = result.filePaths[0];
+          const fileContent = fs.readFileSync(filePath, 'utf-8');
+          event.reply('file-open-reply', fileContent);
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }
+});
+
+// file create in active folder
+ipcMain.on('file-new', (event, arg) => {
+  const fileName = arg[0];
+  const folderPath = store.get('folderPath') as string;
+  const filePath = path.join(folderPath, fileName);
+
+  fs.writeFile(filePath, '', (err) => {
+    if (err) throw err;
+  });
+});
+
+// file save
+ipcMain.on('file-save', (event, arg) => {
+  const filePath = store.get('filePath') as string;
+  if (filePath) {
+    fs.writeFileSync(filePath, arg[0]);
+  } else {
+    const { dialog } = require('electron');
+    dialog
+      .showSaveDialog({
+        properties: ['createDirectory'],
+        filters: [{ name: '', extensions: ['md', 'txt'] }],
+      })
+      .then((result) => {
+        if (result.filePath) {
+          fs.writeFileSync(result.filePath, arg[0]);
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }
+});
+
+// delete file
+ipcMain.on('file-delete', (event, arg) => {
+  const [fileName] = arg;
+  const folderPath = store.get('folderPath') as string;
+  const filePath = path.join(folderPath, fileName);
+  fs.unlinkSync(filePath);
+});
+
+// folder open
+ipcMain.on('folder-open', (event, arg) => {
   const { dialog } = require('electron');
   dialog
     .showOpenDialog({
-      properties: ['openFile'],
-      filters: [{ name: '', extensions: ['md', 'txt'] }],
+      properties: ['openDirectory'],
     })
     .then((result) => {
       if (result.filePaths.length > 0) {
-        const filePath = result.filePaths[0];
-        const fileContent = fs.readFileSync(filePath, 'utf-8');
-        event.reply('file-open-reply', fileContent);
+        const folderPath = result.filePaths[0];
+        const folderContent = fs.readdirSync(folderPath);
+        store.set('folderPath', folderPath);
+        event.reply('folder-open-reply', folderContent);
       }
     })
     .catch((err) => {
@@ -105,7 +177,7 @@ const createWindow = async () => {
     show: false,
     width: 1024,
     height: 728,
-    icon: getAssetPath('logo.icns'),
+    icon: getAssetPath('logo.png'),
     webPreferences: {
       preload: app.isPackaged
         ? path.join(__dirname, 'preload.js')

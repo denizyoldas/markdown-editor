@@ -1,28 +1,30 @@
-import { useState } from 'react';
 import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
 import Editor from './pages/editor';
 import Home from './pages/home';
-
-const Hello = () => {
-  const [page, setPage] = useState<string>('home');
-
-  switch (page) {
-    case 'home':
-      return <Home onClick={() => setPage('editor')} />;
-    case 'editor':
-      return <Editor />;
-    default:
-      return <h1>404</h1>;
-  }
-};
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Hello />} />
-      </Routes>
-    </Router>
+    <>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/editor" element={<Editor />} />
+        </Routes>
+      </Router>
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
+    </>
   );
 }
