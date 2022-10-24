@@ -3,7 +3,8 @@ import Editor from 'renderer/components/editor';
 import Preview from 'renderer/components/preview';
 import Sidebar from 'renderer/components/sidebar';
 import styled from 'styled-components';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
+import ImagePreview from 'renderer/components/image-preview';
 
 const SaveBtn = styled.button`
   position: absolute;
@@ -29,10 +30,12 @@ const EditorPage = () => {
   const [doc, setDoc] = useState<string>(
     window.electron.store.get('file') ?? ''
   );
+  const [fileName, setFileName] = useState<string>('');
 
   useEffect(() => {
     window.electron.ipcRenderer.on('file-open-reply', (event, args) => {
       setDoc(event as string);
+      setFileName(args as string);
     });
   }, []);
 
@@ -49,7 +52,7 @@ const EditorPage = () => {
     });
   };
 
-  const handleDocChange = useCallback((newDoc) => {
+  const handleDocChange = useCallback((newDoc: any) => {
     setDoc(newDoc);
   }, []);
 
@@ -60,10 +63,16 @@ const EditorPage = () => {
         <SaveBtn onClick={saveBtnHandler} type="button">
           Save
         </SaveBtn>
-        <div className="editor">
-          <Editor onChange={handleDocChange} initialDoc={doc} />
-        </div>
-        <Preview doc={doc} />
+        {fileName.includes('.png') || fileName.includes('.jpg') ? (
+          <ImagePreview source={doc} />
+        ) : (
+          <>
+            <div className="editor">
+              <Editor onChange={handleDocChange} initialDoc={doc} />
+            </div>
+            <Preview doc={doc} />
+          </>
+        )}
       </div>
     </>
   );

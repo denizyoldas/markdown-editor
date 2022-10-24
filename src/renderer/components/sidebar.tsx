@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { motion, useAnimation } from 'framer-motion';
+import { AiFillFileAdd } from 'react-icons/ai';
+import { BiRefresh } from 'react-icons/bi';
 import FileIcon from './UI/file-icon';
 
 const Nav = styled.div`
@@ -33,9 +35,12 @@ const VisibleBtn = styled.button`
   }
 `;
 
-const SideBarTitle = styled.h2`
+const SideBarTitle = styled.h3`
   color: white;
   background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 `;
 
 const FileList = styled.ul`
@@ -80,6 +85,24 @@ const NewInput = styled.input`
   }
 `;
 
+const NewFileButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background-color: transparent;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+`;
+
+const ButtonWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  margin: 10px 0;
+`;
+
 const Sidebar = () => {
   const [files, setFiles] = useState<string[]>([]);
   const [active, setActive] = useState<string>('');
@@ -87,10 +110,14 @@ const Sidebar = () => {
   const [newFileName, setNewFileName] = useState<string>('');
 
   useEffect(() => {
-    const sFiles = window.electron.store.get('folder');
-    if (sFiles) {
-      setFiles(sFiles);
-    }
+    window.electron.ipcRenderer.on('folder-open-reply', (event, args) => {
+      window.electron.store.set('folder', event);
+      const sFiles = window.electron.store.get('folder');
+      if (sFiles) {
+        setFiles(sFiles);
+        setActive(sFiles[0]);
+      }
+    });
   }, []);
 
   const openFile = (file: string) => {
@@ -111,16 +138,28 @@ const Sidebar = () => {
     }
   };
 
+  const refreshFolder = () => {
+    window.electron.ipcRenderer.sendMessage('folder-refresh', []);
+  };
+
   return (
-    <div>
+    <div style={{ display: files.length ? 'block' : 'none' }}>
       <Nav>
         <SideBarTitle>
-          Dosyalar <button onClick={addNewFile}>+</button>
+          Dosyalar
+          <ButtonWrapper>
+            <NewFileButton type="button" onClick={addNewFile}>
+              <AiFillFileAdd />
+            </NewFileButton>
+            <NewFileButton type="button" onClick={refreshFolder}>
+              <BiRefresh />
+            </NewFileButton>
+          </ButtonWrapper>
         </SideBarTitle>
         <FileList>
-          {files.map((file, index) => (
+          {files.map((file) => (
             <li
-              key={`file-${file}-${index}`}
+              key={`file-${file}`}
               onClick={() => openFile(file)}
               className={active === file ? 'active' : ''}
             >
@@ -138,6 +177,7 @@ const Sidebar = () => {
               <NewInput
                 type="text"
                 value={newFileName}
+                maxLength={10}
                 onChange={(e) => setNewFileName(e.target.value)}
                 onKeyDown={(e) => createNewFile(e)}
               />

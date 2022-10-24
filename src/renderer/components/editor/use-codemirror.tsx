@@ -66,11 +66,11 @@ const useCodeMirror = <T extends Element>(props: Props): any[] => {
         bracketMatching(),
         defaultHighlightStyle.fallback,
         highlightActiveLine(),
-        markdown({
-          base: markdownLanguage,
-          codeLanguages: languages,
-          addKeymap: true,
-        }),
+        // markdown({
+        //   base: markdownLanguage,
+        //   codeLanguages: languages,
+        //   addKeymap: true,
+        // }),
         oneDark,
         transparentTheme,
         syntaxHighlighting,

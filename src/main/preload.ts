@@ -7,6 +7,7 @@ export type Channels =
   | 'file-new'
   | 'folder-open'
   | 'folder-open-reply'
+  | 'folder-refresh'
   | 'ipc-example'
   | 'electron-store-get'
   | 'electron-store-set';

@@ -4,6 +4,7 @@ import Editor from './pages/editor';
 import Home from './pages/home';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useEffect } from 'react';
 
 export default function App() {
   return (

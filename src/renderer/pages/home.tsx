@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 
@@ -32,6 +32,13 @@ const Home = ({ onClick }: Props) => {
     navigate('/editor');
   };
 
+  // useEffect(() => {
+  //   const folder = window.electron.store.get('folder');
+  //   if (folder.length !== 0) {
+  //     navigateToEditor();
+  //   }
+  // }, []);
+
   const openFileHandler = () => {
     window.electron.ipcRenderer.sendMessage('file-open', []);
 
@@ -44,10 +51,7 @@ const Home = ({ onClick }: Props) => {
   const openFolderHanlder = () => {
     window.electron.ipcRenderer.sendMessage('folder-open', []);
 
-    window.electron.ipcRenderer.on('folder-open-reply', (event, args) => {
-      window.electron.store.set('folder', event);
-      navigateToEditor();
-    });
+    navigateToEditor();
   };
 
   return (
